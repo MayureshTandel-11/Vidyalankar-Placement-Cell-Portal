@@ -5,34 +5,35 @@ import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import { PrimaryButton, StatusMessage } from '../components/ui'
 
-const FACULTY_EMAIL = 'placement_faculty@vsit.edu.in'
-const FACULTY_PASSWORD = 'Placement_Faculty@123456'
-
 export default function LoginPage() {
   const navigate = useNavigate()
   const { login } = useAuth()
-  const [form, setForm] = useState({ email: FACULTY_EMAIL, password: FACULTY_PASSWORD })
+  const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const ok = form.email === FACULTY_EMAIL && form.password === FACULTY_PASSWORD
-    if (!ok) {
-      setError('Invalid credentials')
+    try {
+      const response = await fetch('http://localhost:4000/api/faculty/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed')
+      }
+      login(data.token, data.user)
+      toast.success('Logged in successfully')
+      navigate('/faculty/dashboard')
+    } catch (err) {
+      setError(err.message)
+    } finally {
       setLoading(false)
-      return
     }
-    const user = {
-      email: form.email,
-      name: 'Faculty',
-      role: 'faculty',
-    }
-    login(`mock-jwt-token-${Date.now()}`, user)
-    toast.success('Logged in successfully')
-    navigate('/faculty/dashboard')
   }
 
   return (
