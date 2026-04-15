@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom'
+import Footer from '../components/Footer'
 
 export default function LandingPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-slate-50 p-3 md:p-5">
+    <div className="flex min-h-screen w-full flex-col bg-slate-50 p-3 md:p-5">
+      <div className="flex flex-1 items-center justify-center">
       <div className="w-full max-w-3xl">
         <div className="glass-panel p-8 text-center shadow-lg shadow-slate-200/60 md:p-10">
           <h1 className="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 bg-clip-text text-3xl font-extrabold text-transparent md:text-4xl">
@@ -29,6 +31,8 @@ export default function LandingPage() {
         </div>
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   )
 }

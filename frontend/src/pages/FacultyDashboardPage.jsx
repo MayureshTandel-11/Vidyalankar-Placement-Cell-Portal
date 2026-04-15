@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import Layout from '../components/Layout'
 import OpportunityCard from '../components/OpportunityCard'
 import toast from 'react-hot-toast'
-import { EmptyState, SectionTitle, StatusMessage, Modal } from '../components/ui'
+import { EmptyState, SectionTitle, StatusMessage, Modal, Spinner } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
+import { DEPARTMENTS } from '../constants'
 import {
   deleteOpportunity,
   getOpportunities,
@@ -13,22 +14,60 @@ export default function FacultyDashboardPage() {
   const { user } = useAuth()
   const [all, setAll] = useState([])
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
   const [selectedOpportunity, setSelectedOpportunity] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [statusFilter, setStatusFilter] = useState('both')
+  const [search, setSearch] = useState('')
+  const [selectedDepartment, setSelectedDepartment] = useState('Broadcast to All')
+  const [sortOrder, setSortOrder] = useState('asc')
 
-  const opportunities = all.filter((opp) => opp.createdBy === user?.email)
+  const opportunities = useMemo(() =>
+    Array.isArray(all) ? all.filter((opp) => opp.createdBy === user?.email) : [],
+  [all, user?.email])
+
+  const today = new Date().toISOString().slice(0, 10)
+
+  const filtered = useMemo(() => {
+    let result = opportunities
+      .filter((opp) => opp.announcementHeading.toLowerCase().includes(search.toLowerCase()))
+      .filter(
+        (opp) =>
+          selectedDepartment === 'Broadcast to All' ||
+          opp.department === 'Broadcast to All' ||
+          opp.department === selectedDepartment,
+      )
+      .sort((a, b) => (sortOrder === 'asc' ? a.lastDate.localeCompare(b.lastDate) : b.lastDate.localeCompare(a.lastDate)))
+
+    if (statusFilter === 'both') return result
+    return result.filter((opp) => {
+      const archived = opp.lastDate < today
+      return statusFilter === 'active' ? !archived : archived
+    })
+  }, [opportunities, search, selectedDepartment, sortOrder, statusFilter, today])
 
   useEffect(() => {
     let mounted = true
     const load = async () => {
+      setLoading(true)
       try {
-        const data = await getOpportunities()
+        const response = await getOpportunities()
         if (mounted) {
-          setAll(data)
-          setError('')
+          if (response?.data && Array.isArray(response.data)) {
+            setAll(response.data)
+            setError('')
+          } else {
+            setAll([])
+            setError(response?.error || 'Failed to fetch opportunities')
+          }
         }
       } catch (err) {
-        if (mounted) setError(err.message || 'Failed to fetch opportunities')
+        if (mounted) {
+          setAll([])
+          setError(err.message || 'Failed to fetch opportunities')
+        }
+      } finally {
+        if (mounted) setLoading(false)
       }
     }
     load()
@@ -39,19 +78,31 @@ export default function FacultyDashboardPage() {
     }
   }, [])
 
-  const today = new Date().toISOString().slice(0, 10)
+
   const stats = useMemo(() => {
     const active = opportunities.filter((opp) => opp.lastDate >= today).length
     return { active, archived: opportunities.length - active }
   }, [opportunities, today])
 
+  const active = filtered.filter((opp) => opp.lastDate >= today)
+  const archived = filtered.filter((opp) => opp.lastDate < today)
+
   return (
     <Layout>
       <section className="space-y-6">
-        <div className="glass-panel p-6">
-          <SectionTitle title="Dashboard" subtitle="Overview of your opportunities" />
-        </div>
-        {error && <StatusMessage type="error" message={error} />}
+        {loading ? (
+          <div className="glass-panel p-12 flex items-center justify-center">
+            <Spinner />
+          </div>
+        ) : (
+          <>
+            <div className="glass-panel p-6">
+              <SectionTitle title="Dashboard" subtitle="Overview of your opportunities" />
+            </div>
+            {error && <StatusMessage type="error" message={error} />}
+          </>
+        )}
+
         <div className="grid gap-4 md:grid-cols-2">
           <div className="glass-panel p-6 shadow-lg shadow-indigo-200/30">
             <p className="text-sm text-slate-600">Active Opportunities</p>
@@ -65,36 +116,117 @@ export default function FacultyDashboardPage() {
         {opportunities.length === 0 ? (
           <EmptyState title="No opportunities yet" subtitle="Use Opportunities section to create your first one" />
         ) : (
-          <div className="glass-panel p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900">Recently Posted Opportunities</h3>
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-                {opportunities.length} total
-              </span>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-              {opportunities.map((opp) => (
-                <OpportunityCard
-                  key={opp.id}
-                  opportunity={opp}
-                  onClick={() => {
-                    setSelectedOpportunity(opp)
-                    setIsModalOpen(true)
-                  }}
-                  onDelete={async (id) => {
-                    if (!window.confirm('Are you sure you want to delete this opportunity?')) return
-                    try {
-                      await deleteOpportunity(id)
-                      toast.success('Opportunity deleted')
-                      setAll(await getOpportunities())
-                    } catch (err) {
-                      setError(err.message || 'Failed to delete opportunity')
-                    }
-                  }}
+          <>
+            {/* Filter Section */}
+            <div className="glass-panel p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-base font-bold text-slate-900">Filters</h3>
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                  {filtered.length} results
+                </span>
+              </div>
+              <div className="grid gap-4 xl:grid-cols-[2fr_1fr_1fr_1fr]">
+                <input
+                  className="input-modern w-full"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by opportunity heading..."
                 />
-              ))}
+                <select className="input-modern" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+                  <option value="asc">Deadline: Earliest First</option>
+                  <option value="desc">Deadline: Latest First</option>
+                </select>
+                <select className="input-modern" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                  <option value="both">All Opportunities</option>
+                  <option value="active">Active Only</option>
+                  <option value="archived">Archived Only</option>
+                </select>
+                <select className="input-modern" value={selectedDepartment} onChange={(e) => setSelectedDepartment(e.target.value)}>
+                  <option value="Broadcast to All">All Departments</option>
+                  {DEPARTMENTS.map((dept) => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
+
+            {/* Opportunities Sections */}
+            {filtered.length === 0 ? (
+              <EmptyState title="No opportunities match your filters" subtitle="Adjust your search or filter selection" />
+            ) : (
+              <div className="space-y-6">
+                {(statusFilter === 'both' || statusFilter === 'active') && (
+                  <section>
+                    <h2 className="mb-3 text-xl font-semibold text-slate-900">Active Opportunities ({active.length})</h2>
+                    {active.length === 0 ? (
+                      <EmptyState title="No active opportunities" subtitle="All your opportunities have expired" />
+                    ) : (
+                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                        {active.map((opp) => (
+                          <OpportunityCard
+                            key={opp.id}
+                            opportunity={opp}
+                            onClick={() => {
+                              setSelectedOpportunity(opp)
+                              setIsModalOpen(true)
+                            }}
+                            onDelete={async (id) => {
+                              if (!window.confirm('Are you sure you want to delete this opportunity?')) return
+                              try {
+                                await deleteOpportunity(id)
+                                toast.success('Opportunity deleted')
+                                const response = await getOpportunities()
+                                if (response?.data && Array.isArray(response.data)) {
+                                  setAll(response.data)
+                                }
+                              } catch (err) {
+                                setError(err.message || 'Failed to delete opportunity')
+                              }
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                )}
+
+                {(statusFilter === 'both' || statusFilter === 'archived') && (
+                  <section>
+                    <h2 className="mb-3 text-xl font-semibold text-slate-900">Archived Opportunities ({archived.length})</h2>
+                    {archived.length === 0 ? (
+                      <EmptyState title="No archived opportunities" subtitle="Expired opportunities will appear here" />
+                    ) : (
+                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                        {archived.map((opp) => (
+                          <OpportunityCard
+                            key={opp.id}
+                            opportunity={opp}
+                            onClick={() => {
+                              setSelectedOpportunity(opp)
+                              setIsModalOpen(true)
+                            }}
+                            onDelete={async (id) => {
+                              if (!window.confirm('Are you sure you want to delete this opportunity?')) return
+                              try {
+                                await deleteOpportunity(id)
+                                toast.success('Opportunity deleted')
+                                const response = await getOpportunities()
+                                if (response?.data && Array.isArray(response.data)) {
+                                  setAll(response.data)
+                                }
+                              } catch (err) {
+                                setError(err.message || 'Failed to delete opportunity')
+                              }
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                )}
+              </div>
+            )}
+          </>
         )}
       </section>
 

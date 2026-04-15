@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import OpportunityCard from '../components/OpportunityCard'
 import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
+import MobileMenu from '../components/MobileMenu'
 import { DEPARTMENTS } from '../constants'
 import { EmptyState, SectionTitle, StatusMessage, Modal } from '../components/ui'
 import { getOpportunities } from '../services/opportunitiesJson'
 
 export default function PortalPage() {
+  const navigate = useNavigate()
   const today = new Date().toISOString().slice(0, 10)
   const [search, setSearch] = useState('')
   const [selectedDepartment, setSelectedDepartment] = useState('Broadcast to All')
@@ -20,10 +24,15 @@ export default function PortalPage() {
     let mounted = true
     const load = async () => {
       try {
-        const data = await getOpportunities()
+        const response = await getOpportunities()
         if (mounted) {
-          setOpportunities(data)
-          setError('')
+          if (response?.data && Array.isArray(response.data)) {
+            setOpportunities(response.data)
+            setError('')
+          } else {
+            setOpportunities([])
+            setError(response?.error || 'Failed to fetch opportunities')
+          }
         }
       } catch (err) {
         if (mounted) setError(err.message || 'Failed to fetch opportunities')
@@ -42,7 +51,9 @@ export default function PortalPage() {
       .filter((opp) => opp.announcementHeading.toLowerCase().includes(search.toLowerCase()))
       .filter(
         (opp) =>
-          selectedDepartment === 'Broadcast to All' || opp.department === selectedDepartment,
+          selectedDepartment === 'Broadcast to All' ||
+          opp.department === 'Broadcast to All' ||
+          opp.department === selectedDepartment,
       )
       .sort((a, b) => (sortOrder === 'asc' ? a.lastDate.localeCompare(b.lastDate) : b.lastDate.localeCompare(a.lastDate)))
     if (statusFilter === 'both') return result
@@ -62,9 +73,22 @@ export default function PortalPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 px-3 py-4 md:px-5 md:py-5">
-      <section className="w-full space-y-5">
-        <Navbar mode="student" />
+    <div className="flex min-h-screen w-full flex-col bg-slate-50 px-3 py-4 md:px-5 md:py-5">
+      <section className="flex-1 w-full space-y-5">
+        <div className="flex items-center justify-between gap-3">
+          <MobileMenu>
+            <div className="space-y-3">
+              <h3 className="text-lg font-bold text-slate-900 mb-4">Menu</h3>
+              <button
+                onClick={() => navigate('/')}
+                className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+              >
+                Back to Home
+              </button>
+            </div>
+          </MobileMenu>
+          <Navbar mode="student" />
+        </div>
         <div className="glass-panel p-6">
           <SectionTitle title="Placement Portal" subtitle="Explore opportunities by department" />
         </div>
@@ -223,6 +247,7 @@ export default function PortalPage() {
           </div>
         </div>
       </Modal>
+      <Footer />
     </div>
   )
 }

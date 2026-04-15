@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import Layout from '../components/Layout'
 import OpportunityCard from '../components/OpportunityCard'
 import OpportunityForm from '../components/OpportunityForm'
-import { EmptyState, SectionTitle, StatusMessage, Modal } from '../components/ui'
+import { EmptyState, SectionTitle, StatusMessage, Modal, Spinner } from '../components/ui'
+
 import { STORAGE_KEYS } from '../constants'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -34,21 +36,45 @@ export default function FacultyOpportunitiesPage() {
   const { user } = useAuth()
   const [form, setForm] = useState(makeInitialForm())
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState(null)
   const [all, setAll] = useState([])
   const [selectedOpportunity, setSelectedOpportunity] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const navigate = useNavigate()
 
-  const opportunities = all.filter((opp) => opp.createdBy === user?.email)
+  const opportunities = useMemo(() =>
+    Array.isArray(all) ? all.filter((opp) => opp.createdBy === user?.email) : [],
+  [all, user?.email])
 
   useEffect(() => {
     let mounted = true
+    let isInitial = true
     const load = async () => {
+      if (isInitial) {
+        setLoading(true)
+      }
       try {
-        const data = await getOpportunities()
-        if (mounted) setAll(data)
+        const response = await getOpportunities()
+        if (mounted) {
+          if (response?.data && Array.isArray(response.data)) {
+            setAll(response.data)
+            setError('')
+          } else {
+            setAll([])
+            setError(response?.error || 'Failed to load opportunities')
+          }
+        }
       } catch (err) {
-        if (mounted) setError(err.message || 'Failed to load opportunities')
+        if (mounted) {
+          setAll([])
+          setError(err.message || 'Failed to load opportunities')
+        }
+      } finally {
+        if (mounted && isInitial) {
+          setLoading(false)
+          isInitial = false
+        }
       }
     }
     load()
@@ -58,6 +84,7 @@ export default function FacultyOpportunitiesPage() {
       clearInterval(timer)
     }
   }, [])
+
 
   const validate = (target) => {
     // Check required string fields specifically (skip arrays)
@@ -96,7 +123,7 @@ export default function FacultyOpportunitiesPage() {
     return true
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     setError('')
     if (!validate(form)) return
 
@@ -107,23 +134,31 @@ export default function FacultyOpportunitiesPage() {
         : (form.eligibilityCriteria || '')
     };
 
-    if (editingId) {
-      await updateOpportunity(editingId, submitPayload)
-      toast.success('Opportunity updated')
-      setAll(await getOpportunities())
-      setEditingId(null)
-      setForm(makeInitialForm())
-      return
-    }
+    try {
+      if (editingId) {
+        await updateOpportunity(editingId, submitPayload)
+        toast.success('Opportunity updated')
+        const response = await getOpportunities()
+        if (response?.data && Array.isArray(response.data)) {
+          setAll(response.data)
+        }
+        setEditingId(null)
+        setForm(makeInitialForm())
+        return
+      }
 
-    await createOpportunity({
-      ...submitPayload,
-      createdBy: user?.email || 'unknown',
-    })
-    toast.success('Opportunity created')
-    setAll(await getOpportunities())
-    setForm(makeInitialForm())
-  }
+      await createOpportunity({
+        ...submitPayload,
+        createdBy: user?.email || 'unknown',
+      })
+      toast.success('Opportunity created successfully! Redirecting to dashboard...', { duration: 2500 })
+      navigate('/faculty/dashboard', { replace: true })
+    } catch (err) {
+      const msg = err.message || 'Failed to save opportunity'
+      setError(msg)
+      toast.error(msg)
+    }
+  }, [form, editingId, user?.email, navigate])
 
   const handleModalClose = () => {
     setSelectedOpportunity(null)
@@ -131,12 +166,9 @@ export default function FacultyOpportunitiesPage() {
   }
 
   const handleDelete = async (id) => {
-    // Close modal first to prevent stale data display
-    setIsModalOpen(false)
-
-    // Create a promise-based confirmation with better UX
+    // Show confirmation toast
     const confirmed = await new Promise((resolve) => {
-      const toastId = toast((t) => (
+      const toastId = toast(() => (
         <div className="space-y-3">
           <p className="font-semibold">Delete this opportunity?</p>
           <p className="text-sm opacity-90">This action cannot be undone.</p>
@@ -165,28 +197,26 @@ export default function FacultyOpportunitiesPage() {
     })
 
     if (!confirmed) {
-      // Reopen modal if user cancels deletion
-      setSelectedOpportunity((prev) => all.find((opp) => opp.id === id) || prev)
-      setIsModalOpen(true)
       return
     }
 
     try {
       await deleteOpportunity(id)
+      setSelectedOpportunity(null)
+      setIsModalOpen(false)
       toast.success('Opportunity deleted successfully', {
         icon: '🗑️',
         duration: 3000,
       })
       // Refresh opportunities list
-      const updatedOpps = await getOpportunities()
-      setAll(updatedOpps)
+      const response = await getOpportunities()
+      if (response?.data && Array.isArray(response.data)) {
+        setAll(response.data)
+      }
       // Reset form state
       setForm(makeInitialForm())
       setEditingId(null)
     } catch (err) {
-      // Reopen modal on error
-      setSelectedOpportunity((prev) => all.find((opp) => opp.id === id) || prev)
-      setIsModalOpen(true)
       setError(err.message || 'Failed to delete opportunity')
       toast.error('Failed to delete opportunity')
     }
@@ -195,10 +225,19 @@ export default function FacultyOpportunitiesPage() {
   return (
     <Layout>
       <section className="space-y-6">
-        <div className="glass-panel p-6">
-          <SectionTitle title="Opportunities" subtitle="Create and manage your opportunities" />
-        </div>
-        {error && <StatusMessage type="error" message={error} />}
+        {loading ? (
+          <div className="glass-panel p-12 flex items-center justify-center">
+            <Spinner />
+          </div>
+        ) : (
+          <>
+            <div className="glass-panel p-6">
+              <SectionTitle title="Opportunities" subtitle="Create and manage your opportunities" />
+            </div>
+            {error && <StatusMessage type="error" message={error} />}
+          </>
+        )}
+
         <div className="grid gap-5 xl:grid-cols-[1.2fr_1fr]">
           <OpportunityForm
             value={form}

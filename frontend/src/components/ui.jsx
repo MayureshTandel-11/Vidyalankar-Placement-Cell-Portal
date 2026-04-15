@@ -44,7 +44,7 @@ export function Spinner() {
   return <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
 }
 
-export function Modal({ isOpen, onClose, title, children, type, department }) {
+export function Modal({ isOpen, onClose, title, children, type }) {
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">

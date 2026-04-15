@@ -1,4 +1,4 @@
-@import "tailwindcss";
+ @import "tailwindcss";
 
 body {
   margin: 0;
@@ -206,11 +206,59 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 1px;
-  height: 1px;
+  width: 220px;
+  height: 120px;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  z-index: 3;
+  z-index: 13;
+}
+
+.preloader-reveal .logo {
+  filter: drop-shadow(0 12px 40px rgba(255,255,255,0.5)) drop-shadow(0 0 28px rgba(0,212,255,0.8)) drop-shadow(0 0 12px rgba(124,58,237,0.4));
+}
+
+.logo {
+  width: 240px;
+  height: 120px;
+}
+
+.logo .mt-path-m {
+  animation: stroke-draw-m 2s ease-out 1.1s infinite;
+}
+
+.logo .mt-path-t {
+  animation: stroke-draw-t 1.8s ease-out 1.4s infinite;
+}
+
+@keyframes stroke-draw-m {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes stroke-draw-t {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.preloader-reveal .logo {
+  animation: logo-center-glow 1.5s ease-out 1s both;
+}
+
+@keyframes logo-center-glow {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-10deg);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
 }
 
 .preloader-canvas {
@@ -367,4 +415,18 @@ body {
     opacity: 0.06;
     transform: translateX(-0.8px);
   }
+}
+
+.preloader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: all;
+  background: transparent;
+  transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.preloader-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
 }

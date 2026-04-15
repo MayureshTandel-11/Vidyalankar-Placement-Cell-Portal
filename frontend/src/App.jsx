@@ -5,8 +5,8 @@ import PortalPage from './pages/PortalPage'
 import LandingPage from './pages/LandingPage'
 import FacultyDashboardPage from './pages/FacultyDashboardPage'
 import FacultyOpportunitiesPage from './pages/FacultyOpportunitiesPage'
-import Preloader from './components/Preloader'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth()
@@ -19,12 +19,6 @@ function PublicOnly({ children }) {
 }
 
 export default function App() {
-  const [showPreloader, setShowPreloader] = useState(true)
-
-  if (showPreloader) {
-    return <Preloader onComplete={() => setShowPreloader(false)} />
-  }
-
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />

@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import { PrimaryButton, StatusMessage } from '../components/ui'
+import Footer from '../components/Footer'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -17,7 +18,7 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:4000/api/faculty/login', {
+      const response = await fetch('http://localhost:5001/api/faculty/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -26,6 +27,7 @@ export default function LoginPage() {
       if (!response.ok) {
         throw new Error(data.error || 'Login failed')
       }
+      localStorage.setItem('token', data.token)
       login(data.token, data.user)
       toast.success('Logged in successfully')
       navigate('/faculty/dashboard')
@@ -37,8 +39,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-slate-50 p-3 md:p-5">
-      <div className="w-full max-w-md">
+    <div className="flex min-h-screen w-full flex-col bg-slate-50 p-3 md:p-5">
+      <div className="flex flex-1 items-center justify-center">
+        <div className="w-full max-w-md">
         <div className="glass-panel p-8 shadow-lg shadow-slate-200/60">
           <button
             type="button"
@@ -90,7 +93,9 @@ export default function LoginPage() {
             </PrimaryButton>
           </form>
         </div>
+        </div>
       </div>
+      <Footer />
     </div>
   )
 }

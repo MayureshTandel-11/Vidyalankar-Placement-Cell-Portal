@@ -742,35 +742,45 @@ export default function Preloader({ onComplete }) {
     window.addEventListener('resize', handleResize)
     loop()
 
+    // Fallback timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (!doneRef.current && onComplete) {
+        onComplete()
+      }
+    }, 3000)
+
     return () => {
       cancelAnimationFrame(rafId)
       window.removeEventListener('resize', handleResize)
+      clearTimeout(timeoutId)
     }
   }, [onComplete])
 
   return (
-    <div ref={stageRef} id="stage" className="preloader-stage preloader">
-      <div className="preloader-aurora" />
-      <div className="preloader-beam preloader-beam-cyan" />
-      <div className="preloader-beam preloader-beam-violet" />
-      <div className="energy-core" />
-      <div className="ring ring-outer" />
-      <div className="ring ring-inner" />
-      <div className="logo" aria-hidden="true" />
-      <div className="preloader-grid-overlay" />
-      <div className="preloader-noise" />
-      <div className="preloader-chroma-edge" />
-      {[0, 1, 2, 3, 4].map((z, i) => (
-        <canvas
-          key={z}
-          id={`c${z}`}
-          ref={(el) => {
-            canvasRefs.current[i] = el
-          }}
-          className={`preloader-canvas preloader-canvas-${z}`}
-        />
-      ))}
-      <div ref={scanlineRef} id="scanline" className="preloader-scanline" />
+    <div className="preloader-overlay" ref={stageRef}>
+      <div id="stage" className="preloader-stage preloader">
+        <div className="preloader-aurora" />
+        <div className="preloader-beam preloader-beam-cyan" />
+        <div className="preloader-beam preloader-beam-violet" />
+        <div className="energy-core" />
+        <div className="ring ring-outer" />
+        <div className="ring ring-inner" />
+
+        <div className="preloader-grid-overlay" />
+        <div className="preloader-noise" />
+        <div className="preloader-chroma-edge" />
+        {[0, 1, 2, 3, 4].map((z, i) => (
+          <canvas
+            key={z}
+            id={`c${z}`}
+            ref={(el) => {
+              canvasRefs.current[i] = el
+            }}
+            className={`preloader-canvas preloader-canvas-${z}`}
+          />
+        ))}
+        <div ref={scanlineRef} id="scanline" className="preloader-scanline" />
+      </div>
     </div>
   )
 }

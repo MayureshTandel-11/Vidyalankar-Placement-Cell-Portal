@@ -1,4 +1,21 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+import { STORAGE_KEYS } from '../constants';
+
+const API_BASE_URL = 'http://localhost:5001';
+
+export const getAuthHeaders = () => {
+  try {
+    const authData = localStorage.getItem(STORAGE_KEYS.auth);
+    if (authData) {
+      const { token } = JSON.parse(authData);
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    }
+  } catch {
+    // Fallback to old token key for compatibility
+    const token = localStorage.getItem('token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+  return {};
+};
 
 function normalize(item) {
   return {
@@ -19,35 +36,78 @@ function normalize(item) {
 }
 
 export async function getOpportunities() {
-  const res = await fetch(`${API_BASE_URL}/opportunities`, { cache: 'no-store' })
-  if (!res.ok) throw new Error('Failed to fetch opportunities')
-  const data = await res.json()
-  return Array.isArray(data) ? data.map(normalize) : []
+  try {
+    const res = await fetch(`${API_BASE_URL}/opportunities`, {
+      cache: 'no-store',
+      headers: getAuthHeaders()
+    })
+    if (!res.ok) {
+      if (res.status === 401) {
+        // Clear invalid token
+        localStorage.removeItem('token');
+        localStorage.removeItem(STORAGE_KEYS.auth);
+        return { error: 'Authentication required. Please log in as faculty for full access, or try refreshing.' }
+      }
+      return { error: `Failed to fetch opportunities: ${res.status}` }
+    }
+    const data = await res.json()
+    return { data: Array.isArray(data) ? data.map(normalize) : [] }
+  } catch (error) {
+    return { error: error.message }
+  }
 }
 
 export async function createOpportunity(payload) {
-  const res = await fetch(`${API_BASE_URL}/opportunities`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-  if (!res.ok) throw new Error('Failed to create opportunity')
-  const data = await res.json()
-  return normalize(data)
+  try {
+    const res = await fetch(`${API_BASE_URL}/opportunities`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) {
+      return { error: 'Failed to create opportunity' }
+    }
+    const data = await res.json()
+    return { data: normalize(data) }
+  } catch (error) {
+    return { error: error.message }
+  }
 }
 
 export async function updateOpportunity(id, payload) {
-  const res = await fetch(`${API_BASE_URL}/opportunities/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-  if (!res.ok) throw new Error('Failed to update opportunity')
-  const data = await res.json()
-  return normalize(data)
+  try {
+    const res = await fetch(`${API_BASE_URL}/opportunities/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) {
+      return { error: 'Failed to update opportunity' }
+    }
+    const data = await res.json()
+    return { data: normalize(data) }
+  } catch (error) {
+    return { error: error.message }
+  }
 }
 
 export async function deleteOpportunity(id) {
-  const res = await fetch(`${API_BASE_URL}/opportunities/${id}`, { method: 'DELETE' })
-  if (!res.ok) throw new Error('Failed to delete opportunity')
+  try {
+    const res = await fetch(`${API_BASE_URL}/opportunities/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    })
+    if (!res.ok) {
+      return { error: 'Failed to delete opportunity' }
+    }
+    return { data: true }
+  } catch (error) {
+    return { error: error.message }
+  }
 }

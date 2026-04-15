@@ -55,7 +55,10 @@ export default function OpportunityCard({ opportunity, onEdit, onDelete, onClick
           </button>
         ) : (
           <button
-            onClick={() => window.open(opportunity.applicationLink, '_blank')}
+            onClick={(e) => {
+              e.stopPropagation()
+              window.open(opportunity.applicationLink, '_blank')
+            }}
             className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-sky-500 px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
           >
             <Sparkles className="h-4 w-4" />
@@ -65,12 +68,24 @@ export default function OpportunityCard({ opportunity, onEdit, onDelete, onClick
         {(onEdit || onDelete) && (
           <div className="flex gap-2 opacity-0 transition group-hover:opacity-100">
             {onEdit && (
-              <button onClick={() => onEdit(opportunity)} className="rounded-lg bg-blue-600 p-2 text-white">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEdit(opportunity)
+                }}
+                className="rounded-lg bg-blue-600 p-2 text-white"
+              >
                 <Pencil className="h-4 w-4" />
               </button>
             )}
             {onDelete && (
-              <button onClick={() => onDelete(opportunity.id)} className="rounded-lg bg-rose-600 p-2 text-white">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(opportunity.id)
+                }}
+                className="rounded-lg bg-rose-600 p-2 text-white"
+              >
                 <Trash2 className="h-4 w-4" />
               </button>
             )}

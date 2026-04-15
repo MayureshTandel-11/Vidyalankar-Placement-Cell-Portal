@@ -11,36 +11,41 @@ export default function Navbar({ mode = 'student' }) {
   }
 
   return (
-    <header className="glass-panel sticky top-3 z-30 flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+    <header className="glass-panel sticky top-3 z-30 flex w-full items-center justify-between gap-3 px-5 py-4">
       <Link to="/" className="inline-flex items-center gap-2 text-lg font-bold text-slate-900">
         <span className="inline-block h-2.5 w-2.5 rounded-full bg-indigo-500 shadow shadow-indigo-400/80" />
-        Placement Portal
+        <span className="hidden sm:inline">Placement Portal</span>
+        <span className="sm:hidden text-base">Portal</span>
       </Link>
 
       <nav className="flex items-center gap-2">
         {mode === 'student' ? (
           <>
-            <Link to="/dashboard" className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+            <Link to="/dashboard" className="hidden md:inline-block rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
               Student Dashboard
             </Link>
             <Link to="/login" className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
-              Faculty Login
+              Back to Landing Page
             </Link>
           </>
         ) : (
           <>
-            <Link to="/faculty/dashboard" className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+            <Link to="/faculty/dashboard" className="hidden md:inline-block rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
               Dashboard
             </Link>
-            <span className="hidden text-sm text-slate-600 md:inline">{user?.email || 'Faculty'}</span>
+<span className="hidden text-sm text-slate-600 md:inline"><svg className="h-5 w-5 text-slate-700" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6.5-2.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM12.483 10.434a.5.5 0 00-.736-.374l-3.656 2.183a.5.5 0 00-.21.287l-.693 1.979a.5.5 0 00.668.388l2.317-1.298a.5.5 0 00.273-.273l3.654-2.183a.5.5 0 00.374-.736l-1.657-1.962z" clipRule="evenodd"/></svg></span>
             {token && (
-              <button onClick={handleLogout} className="rounded-lg bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-rose-700">
+              <button
+                onClick={handleLogout}
+                className="hidden md:block rounded-lg bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-rose-700"
+              >
                 Logout
               </button>
             )}
           </>
         )}
       </nav>
+
     </header>
   )
 }

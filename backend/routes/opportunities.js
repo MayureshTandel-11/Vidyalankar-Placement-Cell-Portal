@@ -1,4 +1,5 @@
 import express from 'express'
+import crypto from 'node:crypto'
 import { readOpportunitiesFile, writeOpportunitiesFile } from '../utils/fileHandler.js'
 
 const router = express.Router()
@@ -17,7 +18,7 @@ router.get('/', async (_req, res) => {
     const opportunities = await readOpportunitiesFile()
     res.json(opportunities)
   } catch (error) {
-    res.status(500).json({ message: 'Failed to read opportunities', error: error.message })
+    res.status(500).json({ message: 'Failed to read opportunities' })
   }
 })
 
@@ -48,7 +49,7 @@ router.post('/', async (req, res) => {
     await writeOpportunitiesFile(opportunities)
     return res.status(201).json(newOpportunity)
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to create opportunity', error: error.message })
+    return res.status(500).json({ message: 'Failed to create opportunity' })
   }
 })
 
@@ -76,7 +77,7 @@ router.put('/:id', async (req, res) => {
     await writeOpportunitiesFile(opportunities)
     return res.json(next)
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to update opportunity', error: error.message })
+    return res.status(500).json({ message: 'Failed to update opportunity' })
   }
 })
 
@@ -91,7 +92,7 @@ router.delete('/:id', async (req, res) => {
     await writeOpportunitiesFile(filtered)
     return res.status(204).send()
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to delete opportunity', error: error.message })
+    return res.status(500).json({ message: 'Failed to delete opportunity' })
   }
 })
 
