@@ -1,8 +1,22 @@
 import { Menu, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect } from 'react'
+import { useMobileMenu } from '../context/MobileMenuContext'
 
 export default function MobileMenu({ children, showOnMobile = true }) {
-  const [isOpen, setIsOpen] = useState(false)
+  const { isOpen, setIsOpen } = useMobileMenu()
+
+  // Lock body scroll when menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
 
   if (!showOnMobile) return null
 

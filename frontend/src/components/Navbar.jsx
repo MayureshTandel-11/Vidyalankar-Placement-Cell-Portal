@@ -1,9 +1,11 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useMobileMenu } from '../context/MobileMenuContext'
 
 export default function Navbar({ mode = 'student' }) {
   const navigate = useNavigate()
   const { user, token, logout } = useAuth()
+  const { isOpen } = useMobileMenu()
 
   const handleLogout = () => {
     logout()
@@ -14,7 +16,7 @@ export default function Navbar({ mode = 'student' }) {
   const isPortalPage = location.pathname === '/dashboard';
 
   return (
-    <header className="glass-panel sticky top-0 z-50 flex w-full items-center justify-between gap-3 px-5 py-4">
+    <header className={`glass-panel sticky top-0 z-50 flex w-full items-center justify-between gap-3 px-5 py-4 ${isOpen ? 'hidden md:flex' : ''}`}>
       {mode === 'student' ? (
         <Link to="/dashboard" className={`inline-flex items-center gap-2 text-lg font-bold text-slate-900 ${isPortalPage ? 'cursor-default' : ''}`} onClick={(e) => {
           if (isPortalPage) e.preventDefault();
