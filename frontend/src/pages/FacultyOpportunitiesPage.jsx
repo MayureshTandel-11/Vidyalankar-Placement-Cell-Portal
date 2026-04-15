@@ -15,16 +15,17 @@ import {
   updateOpportunity,
 } from '../services/opportunitiesJson'
 
-const makeInitialForm = () => ({
-  announcementHeading: '',
-  type: 'Internship',
-  description: '',
-  eligibilityCriteria: '',
-  yearEligibility: [],
-  lastDate: '',
-  applicationLink: '',
-  department: localStorage.getItem(STORAGE_KEYS.lastDepartment) || 'Broadcast to All',
-})
+  const makeInitialForm = () => ({
+    announcementHeading: '',
+    type: 'Internship',
+    description: '',
+    eligibilityCriteria: '',
+    yearEligibility: [],
+    lastDate: '',
+    applicationLink: '',
+    department: localStorage.getItem(STORAGE_KEYS.lastDepartment) || 'Broadcast to All',
+    departments: [],
+  })
 
 function isArchived(lastDate) {
   if (!lastDate) return true
@@ -93,7 +94,6 @@ export default function FacultyOpportunitiesPage() {
       description: target.description,
       lastDate: target.lastDate,
       applicationLink: target.applicationLink,
-      department: target.department,
     };
 
     if (Object.values(requiredStrings).some((item) => !String(item).trim())) {
@@ -128,6 +128,9 @@ export default function FacultyOpportunitiesPage() {
 
     const submitPayload = {
       ...form,
+      department: Array.isArray(form.departments) && form.departments.length > 0
+        ? form.departments.join(', ')
+        : form.department || 'Broadcast to All',
       eligibilityCriteria: Array.isArray(form.yearEligibility) && form.yearEligibility.length > 0
         ? form.yearEligibility.join(', ')
         : (form.eligibilityCriteria || '')
@@ -276,7 +279,8 @@ export default function FacultyOpportunitiesPage() {
                     setEditingId(picked.id)
                     setForm({
                       ...picked,
-                      yearEligibility: picked.eligibilityCriteria ? picked.eligibilityCriteria.split(', ').map(s => s.trim()).filter(Boolean) : []
+                      yearEligibility: picked.eligibilityCriteria ? picked.eligibilityCriteria.split(', ').map(s => s.trim()).filter(Boolean) : [],
+                      departments: picked.department ? picked.department.split(', ').map(s => s.trim()).filter(Boolean) : []
                     })
                   }}
                   onDelete={handleDelete}

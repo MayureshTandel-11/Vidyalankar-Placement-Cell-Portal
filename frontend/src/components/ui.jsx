@@ -46,28 +46,46 @@ export function Spinner() {
 
 export function Modal({ isOpen, onClose, title, children, type }) {
   if (!isOpen) return null
+
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) onClose()
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
-        {/* Header */}
-        <div className="sticky top-0 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-sky-50 px-8 py-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <h2 className="text-3xl font-bold text-slate-900">{title}</h2>
-              {type && <p className="mt-2 text-sm text-slate-600">Opportunity Type: <span className="font-semibold text-indigo-600">{type}</span></p>}
-            </div>
-            <button
-              onClick={onClose}
-              className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
-            >
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+    <div
+      className="fixed inset-0 z-50 flex p-4 items-center justify-center bg-black/50 backdrop-blur-sm"
+      onClick={handleOverlayClick}
+    >
+      <div className="w-full max-w-2xl mx-auto max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl overflow-hidden">
+        {/* Fixed Header */}
+        <div className="flex items-start justify-between gap-4 p-6 pb-4 border-b border-slate-200 bg-white/95 backdrop-blur-sm sticky top-0 z-10">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl md:text-2xl font-bold text-slate-900 break-words overflow-wrap-anywhere hyphens-auto pr-4 leading-tight">
+              {title}
+            </h2>
+            {type && (
+              <p className="mt-1.5 text-sm text-slate-600">
+                Opportunity Type: <span className="font-semibold text-indigo-600">{type}</span>
+              </p>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="flex-shrink-0 rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 -mr-1"
+            aria-label="Close modal"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8 scrollbar-thin scrollbar-thumb-slate-400 scrollbar-thumb-rounded-full scrollbar-track-slate-100 hover:scrollbar-thumb-slate-500">
+          <div className="min-h-full max-w-full prose prose-sm sm:prose leading-relaxed text-slate-700">
+            {children}
           </div>
         </div>
-        {/* Content */}
-        <div className="p-8">{children}</div>
       </div>
     </div>
   )

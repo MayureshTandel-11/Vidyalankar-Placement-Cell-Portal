@@ -1,1 +1,58 @@
-[]
+[
+  {
+    "_id": "a8626175-955c-47a5-bd69-c973d7faa949",
+    "announcementHeading": "erq 2026",
+    "type": "Internship",
+    "description": "Education empowers individuals and shapes societies. It builds knowledge, critical thinking, and values. A well-educated population contributes to economic growth and social harmony. Access to quality education should be a fundamental right for everyone.",
+    "eligibilityCriteria": "Second Year, First Year, Third Year",
+    "lastDate": "2026-04-16",
+    "department": "B.Sc.DS",
+    "applicationLink": "https://www.youtube.com/watch?v=bP8ATWCvqzw&list=RDbP8ATWCvqzw&start_radio=1",
+    "createdBy": "placement_faculty@vsit.edu.in",
+    "createdAt": "2026-04-15T13:24:29.641Z",
+    "updatedAt": "2026-04-15T13:24:29.641Z",
+    "status": "active"
+  },
+  {
+    "_id": "0a89d90b-7bb0-401f-9579-2ce7e1e43aa2",
+    "announcementHeading": "adn.abf 2026",
+    "type": "Internship",
+    "description": "Technology has transformed modern life. From smartphones to artificial intelligence, it enhances communication, productivity, and convenience. However, overdependence may reduce human interaction. A balanced approach ensures technology serves humanity positively.",
+    "eligibilityCriteria": "First Year, Masters, Third Year",
+    "lastDate": "2026-04-16",
+    "department": "BMS",
+    "applicationLink": "https://www.youtube.com/watch?v=bP8ATWCvqzw&list=RDbP8ATWCvqzw&start_radio=1",
+    "createdBy": "placement_faculty@vsit.edu.in",
+    "createdAt": "2026-04-15T13:25:17.442Z",
+    "updatedAt": "2026-04-15T13:25:17.442Z",
+    "status": "active"
+  },
+  {
+    "_id": "aee8f33c-fdb4-41b5-b0e1-65fe0ef7d687",
+    "announcementHeading": "ahj 2026",
+    "type": "Internship",
+    "description": "Good health is essential for a happy life. Regular exercise, a balanced diet, and proper sleep improve physical and mental well-being. Preventive care and healthy habits reduce the risk of diseases and enhance quality of life.",
+    "eligibilityCriteria": "First Year, Second Year, Third Year",
+    "lastDate": "2026-04-16",
+    "department": "BFM",
+    "applicationLink": "https://www.youtube.com/watch?v=bP8ATWCvqzw&list=RDbP8ATWCvqzw&start_radio=1",
+    "createdBy": "placement_faculty@vsit.edu.in",
+    "createdAt": "2026-04-15T13:25:53.024Z",
+    "updatedAt": "2026-04-15T13:25:53.024Z",
+    "status": "active"
+  },
+  {
+    "_id": "b4136567-dcd7-4118-99e1-0b0ddfc82b8d",
+    "announcementHeading": "UNICEF off Campus hiring 2025 ,2026 & 2027 BATCH                                                                                                                           Internship opportunity for  BScDS/ BScIT/BAF/BBI/BMS/BFM/BAMMC/MCom/MScIT/MAEMA 2025, 2026 & 2027 batch",
+    "type": "Internship",
+    "description": "Important:\n- APPLY ONLY IF YOU WISH TO JOIN.\n- Read complete job proposal and and about the company.\n- Look decent, be neat and clean, wear formals only.\n- Carry hardcopy of your resume and a passport size professional photograph.\n- Be on time at venue.",
+    "eligibilityCriteria": "First Year, Masters, Second Year",
+    "lastDate": "2026-04-16",
+    "department": "B.Sc.IT, BMS, BBI, BAF",
+    "applicationLink": "https://www.youtube.com/watch?v=AbkEmIgJMcU&list=RDbP8ATWCvqzw&index=9",
+    "createdBy": "placement_faculty@vsit.edu.in",
+    "createdAt": "2026-04-15T14:04:43.169Z",
+    "updatedAt": "2026-04-15T14:04:43.169Z",
+    "status": "active"
+  }
+]
