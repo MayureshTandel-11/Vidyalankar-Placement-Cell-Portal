@@ -17,6 +17,20 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
+
+    // Basic validation
+    if (!form.email.trim() || !form.password.trim()) {
+      setError('Please fill in all fields')
+      setLoading(false)
+      return
+    }
+
+    if (!/\S+@\S+\.\S+/.test(form.email)) {
+      setError('Please enter a valid email address')
+      setLoading(false)
+      return
+    }
+
     try {
       const response = await fetch('http://localhost:5001/api/faculty/login', {
         method: 'POST',
@@ -27,7 +41,6 @@ export default function LoginPage() {
       if (!response.ok) {
         throw new Error(data.error || 'Login failed')
       }
-      localStorage.setItem('token', data.token)
       login(data.token, data.user)
       toast.success('Logged in successfully')
       navigate('/faculty/dashboard')

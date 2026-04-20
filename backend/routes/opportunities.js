@@ -1,8 +1,30 @@
 import express from 'express'
 import crypto from 'node:crypto'
+import Joi from 'joi'
+import DOMPurify from 'dompurify'
+import { JSDOM } from 'jsdom'
 import { readOpportunitiesFile, writeOpportunitiesFile } from '../utils/fileHandler.js'
 
 const router = express.Router()
+
+const window = new JSDOM('').window
+const DOMPurifyInstance = DOMPurify(window)
+
+const sanitize = (str) => DOMPurifyInstance.sanitize(str, { ALLOWED_TAGS: [] })
+
+const opportunitySchema = Joi.object({
+  announcementHeading: Joi.string().min(1).max(200).required(),
+  type: Joi.string().valid('Internship', 'Placement').required(),
+  description: Joi.string().max(10000).allow(''),
+  eligibilityCriteria: Joi.string().max(1000).allow(''),
+  lastDate: Joi.date().iso().required(),
+  department: Joi.string().allow(''),
+  departments: Joi.array().items(Joi.string()).allow(null),
+  yearEligibility: Joi.array().items(Joi.string()).allow(null),
+  applicationLink: Joi.string().uri().required(),
+  createdBy: Joi.string().allow(''),
+  status: Joi.string().allow('')
+})
 
 function nowIso() {
   return new Date().toISOString()
@@ -24,22 +46,25 @@ router.get('/', async (_req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const payload = req.body || {}
-    if (!payload.announcementHeading || !payload.lastDate || !payload.applicationLink) {
-      return res.status(400).json({ message: 'Missing required fields' })
+    const { error, value } = opportunitySchema.validate(req.body)
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message })
     }
 
+    const payload = value
     const opportunities = await readOpportunitiesFile()
     const newOpportunity = {
       _id: crypto.randomUUID(),
-      announcementHeading: payload.announcementHeading,
-      type: payload.type || 'Internship',
-      description: payload.description || '',
-      eligibilityCriteria: payload.eligibilityCriteria || '',
+      announcementHeading: sanitize(payload.announcementHeading),
+      type: payload.type,
+      description: sanitize(payload.description || ''),
+      eligibilityCriteria: sanitize(payload.eligibilityCriteria || ''),
       lastDate: payload.lastDate,
-      department: payload.department || 'Broadcast to All',
+      department: payload.departments ? 'Multiple' : (payload.department || 'Broadcast to All'),
+      departments: payload.departments,
+      yearEligibility: payload.yearEligibility,
       applicationLink: payload.applicationLink,
-      createdBy: payload.createdBy || 'unknown',
+      createdBy: payload.createdBy || req.user?.email || 'unknown',
       createdAt: nowIso(),
       updatedAt: nowIso(),
       status: payload.status || computeStatus(payload.lastDate),
@@ -55,8 +80,13 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
+    const { error, value } = opportunitySchema.validate(req.body)
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message })
+    }
+
     const id = req.params.id
-    const payload = req.body || {}
+    const payload = value
     const opportunities = await readOpportunitiesFile()
     const index = opportunities.findIndex((item) => item._id === id)
 
@@ -65,7 +95,15 @@ router.put('/:id', async (req, res) => {
     const current = opportunities[index]
     const next = {
       ...current,
-      ...payload,
+      announcementHeading: payload.announcementHeading ? sanitize(payload.announcementHeading) : current.announcementHeading,
+      type: payload.type || current.type,
+      description: payload.description !== undefined ? sanitize(payload.description) : current.description,
+      eligibilityCriteria: payload.eligibilityCriteria !== undefined ? sanitize(payload.eligibilityCriteria) : current.eligibilityCriteria,
+      lastDate: payload.lastDate || current.lastDate,
+      department: payload.departments ? 'Multiple' : (payload.department || current.department),
+      departments: payload.departments !== undefined ? payload.departments : current.departments,
+      yearEligibility: payload.yearEligibility !== undefined ? payload.yearEligibility : current.yearEligibility,
+      applicationLink: payload.applicationLink || current.applicationLink,
       _id: current._id,
       updatedAt: nowIso(),
     }

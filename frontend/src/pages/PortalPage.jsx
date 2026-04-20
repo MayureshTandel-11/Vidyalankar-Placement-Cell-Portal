@@ -42,7 +42,8 @@ export default function PortalPage() {
       }
     }
     load()
-    const timer = setInterval(load, 4000)
+    // Reduce polling frequency to avoid excessive requests
+    const timer = setInterval(load, 30000) // Changed from 4000 to 30000 (30 seconds)
     return () => {
       mounted = false
       clearInterval(timer)
